@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>New Tab</title>
+    <style>
+      body {
+        margin: 0; min-height: 100vh; display: grid; place-items: center;
+        background: #0d1017; color: #c8cfdb;
+        font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      .wrap { width: min(520px, 90vw); text-align: center }
+      .spin { width: 10px; height: 10px; border-radius: 50%; background: #7cc4f8;
+              display: inline-block; margin-right: 8px; animation: p 1s infinite }
+      @keyframes p { 50% { opacity: .25 } }
+      input, button { font: inherit; padding: 9px 11px; border-radius: 9px;
+                      border: 1px solid #2a3140; background: #151a24; color: inherit }
+      input { width: 100%; box-sizing: border-box; margin: 10px 0 }
+      button { cursor: pointer; background: #2d9cdb; border-color: #2d9cdb; color: #fff }
+      .hint { margin-top: 14px; font-size: 12px; color: #6d778a }
+      a { color: #7cc4f8 }
+    </style>
+  </head>
+  <body>
+    <div class="wrap" id="app"><span class="spin"></span>Opening your boards…</div>
+    <script src="newtab.js"></script>
+  </body>
+</html>

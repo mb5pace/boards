@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "Boards",
+  "version": "0.1.0",
+  "description": "Your boards, on every new tab.",
+  "chrome_url_overrides": { "newtab": "newtab.html" },
+  "action": { "default_popup": "popup.html", "default_title": "Boards" },
+  "permissions": ["storage"]
+}

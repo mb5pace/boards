@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * { box-sizing: border-box }
+      body { width: 300px; margin: 0; padding: 14px; color: #dce5f0; background: #0d1119;
+             font: 12px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif }
+      h1 { margin: 0 0 3px; font-size: 16px }
+      p { margin: 0 0 11px; color: #8290a4 }
+      input, button { width: 100%; border: 1px solid #2b3545; border-radius: 8px;
+                      color: inherit; background: #161d29; font: inherit }
+      input { padding: 9px 10px; margin-bottom: 8px }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px }
+      button { padding: 8px; cursor: pointer }
+      button:hover { border-color: #65b7ef }
+      #local { grid-column: 1 / -1 }
+      #open { margin-top: 9px; color: #071725; background: #7cc4f8; border-color: #7cc4f8; font-weight: 700 }
+      #status { min-height: 18px; margin-top: 7px; color: #91d2ff; text-align: center }
+    </style>
+  </head>
+  <body>
+    <h1>Boards</h1>
+    <p>Choose where new tabs open.</p>
+    <input id="url" type="url" placeholder="https://your-app.vercel.app" />
+    <div class="grid">
+      <button id="production">Production</button>
+      <button id="preview">Preview URL</button>
+      <button id="local">localhost:5173</button>
+    </div>
+    <button id="open">Open app</button>
+    <div id="status" role="status"></div>
+    <script src="popup.js"></script>
+  </body>
+</html>
