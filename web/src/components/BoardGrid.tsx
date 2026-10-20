@@ -14,9 +14,17 @@ import type {
   DragEndEvent,
   DragOverEvent,
   DragStartEvent,
+  KeyboardCoordinateGetter,
 } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
+import {
+  BOARD_GAP,
+  BOARD_WIDTH,
+  createBoardFlow,
+  estimateBoardHeight,
+} from '../lib/boardFlow';
 import { asDragItemData, boardDragId, pageDropId } from '../lib/dnd';
 import type { DragItemData } from '../lib/dnd';
 import type { Board, ID, Link, Page } from '../types';
@@ -36,6 +44,18 @@ interface BoardGridProps {
   onEditLink: (link: Link) => void;
   onDeleteLink: (link: Link) => void;
   onDragEnd: (event: DragEndEvent) => void;
+}
+
+interface FlowGridStyle extends CSSProperties {
+  '--flow-height-3': string;
+  '--flow-height-2': string;
+}
+
+interface FlowItemStyle extends CSSProperties {
+  '--flow-left-3': string;
+  '--flow-top-3': string;
+  '--flow-left-2': string;
+  '--flow-top-2': string;
 }
 
 function PageDropTarget({ page }: { page: Page }) {
@@ -58,14 +78,17 @@ function PageDropTarget({ page }: { page: Page }) {
   );
 }
 
+function isValidDropTarget(active: DragItemData | null, candidate: DragItemData | null): boolean {
+  if (!active || !candidate) return false;
+  if (active.type === 'board') return candidate.type === 'board' || candidate.type === 'page';
+  return candidate.type === 'link' || candidate.type === 'board' || candidate.type === 'add-board';
+}
+
 const collisionDetection: CollisionDetection = (args) => {
   const activeData = asDragItemData(args.active.data.current);
-  const validContainers = args.droppableContainers.filter((container) => {
-    const candidate = asDragItemData(container.data.current);
-    if (!activeData || !candidate) return false;
-    if (activeData.type === 'board') return candidate.type === 'board' || candidate.type === 'page';
-    return candidate.type === 'link' || candidate.type === 'board' || candidate.type === 'add-board';
-  });
+  const validContainers = args.droppableContainers.filter((container) => (
+    isValidDropTarget(activeData, asDragItemData(container.data.current))
+  ));
 
   const pointerCollisions = pointerWithin({ ...args, droppableContainers: validContainers });
   if (pointerCollisions.length) {
@@ -83,6 +106,35 @@ const collisionDetection: CollisionDetection = (args) => {
   return closestCenter({ ...args, droppableContainers: validContainers });
 };
 
+const keyboardCoordinates: KeyboardCoordinateGetter = (event, args) => {
+  const activeData = asDragItemData(args.context.active?.data.current);
+  const containers = args.context.droppableContainers;
+  const enabled = containers.getEnabled().filter((container) => (
+    isValidDropTarget(activeData, asDragItemData(container.data.current))
+  ));
+  const filteredContainers = {
+    getEnabled: () => enabled,
+    get: (id: Parameters<typeof containers.get>[0]) => containers.get(id),
+  } as typeof containers;
+
+  return sortableKeyboardCoordinates(event, {
+    ...args,
+    context: { ...args.context, droppableContainers: filteredContainers },
+  });
+};
+
+function placementStyle(
+  desktop: { column: number; top: number },
+  tablet: { column: number; top: number },
+): FlowItemStyle {
+  return {
+    '--flow-left-3': `${desktop.column * (BOARD_WIDTH + BOARD_GAP)}px`,
+    '--flow-top-3': `${desktop.top}px`,
+    '--flow-left-2': `${tablet.column * (BOARD_WIDTH + BOARD_GAP)}px`,
+    '--flow-top-2': `${tablet.top}px`,
+  };
+}
+
 export function BoardGrid({
   pageId,
   pages,
@@ -99,9 +151,32 @@ export function BoardGrid({
   const [activeItem, setActiveItem] = useState<DragItemData | null>(null);
   const [overBoardId, setOverBoardId] = useState<ID | null>(null);
   const sortedBoards = boards.slice().sort((a, b) => a.position - b.position);
+  const linksByBoard = new Map<ID, Link[]>();
+  sortedBoards.forEach((board) => {
+    linksByBoard.set(
+      board.id,
+      links
+        .filter((link) => link.boardId === board.id)
+        .sort((left, right) => left.position - right.position),
+    );
+  });
+
+  const flowItems = sortedBoards.map((board) => ({
+    id: board.id,
+    height: estimateBoardHeight((linksByBoard.get(board.id) ?? []).map((link) => Boolean(link.note?.trim()))),
+  }));
+  const desktopFlow = createBoardFlow(flowItems, 3);
+  const tabletFlow = createBoardFlow(flowItems, 2);
+  const desktopById = new Map(desktopFlow.boards.map((item) => [item.id, item]));
+  const tabletById = new Map(tabletFlow.boards.map((item) => [item.id, item]));
+  const gridStyle: FlowGridStyle = {
+    '--flow-height-3': `${desktopFlow.height}px`,
+    '--flow-height-2': `${tabletFlow.height}px`,
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(KeyboardSensor, { coordinateGetter: keyboardCoordinates }),
   );
 
   const clearDragState = () => {
@@ -151,24 +226,48 @@ export function BoardGrid({
       ) : null}
 
       <SortableContext items={sortedBoards.map((board) => boardDragId(board.id))} strategy={rectSortingStrategy}>
-        <div className={`board-grid${sortedBoards.length ? '' : ' board-grid--empty'}`}>
+        <div
+          className={`board-grid${sortedBoards.length ? '' : ' board-grid--empty'}`}
+          style={sortedBoards.length ? gridStyle : undefined}
+        >
           {!sortedBoards.length ? (
-            <EmptyPageState onCreateBoard={() => onAddBoard('My first board')} />
-          ) : null}
-          {sortedBoards.map((board) => (
-            <BoardCard
-              key={board.id}
-              board={board}
-              links={links.filter((link) => link.boardId === board.id)}
-              dropTarget={overBoardId === board.id}
-              onAddLink={onAddLink}
-              onRename={onRenameBoard}
-              onDeleteBoard={onDeleteBoard}
-              onEditLink={onEditLink}
-              onDeleteLink={onDeleteLink}
-            />
-          ))}
-          <AddBoardTile pageId={pageId} onAdd={onAddBoard} />
+            <>
+              <EmptyPageState onCreateBoard={() => onAddBoard('My first board')} />
+              <AddBoardTile pageId={pageId} onAdd={onAddBoard} />
+            </>
+          ) : (
+            <>
+              {sortedBoards.map((board) => {
+                const desktop = desktopById.get(board.id);
+                const tablet = tabletById.get(board.id);
+                if (!desktop || !tablet) return null;
+                return (
+                  <div
+                    className="board-grid__item"
+                    style={placementStyle(desktop, tablet)}
+                    key={board.id}
+                  >
+                    <BoardCard
+                      board={board}
+                      links={linksByBoard.get(board.id) ?? []}
+                      dropTarget={overBoardId === board.id}
+                      onAddLink={onAddLink}
+                      onRename={onRenameBoard}
+                      onDeleteBoard={onDeleteBoard}
+                      onEditLink={onEditLink}
+                      onDeleteLink={onDeleteLink}
+                    />
+                  </div>
+                );
+              })}
+              <div
+                className="board-grid__item board-grid__item--add"
+                style={placementStyle(desktopFlow.addBoard, tabletFlow.addBoard)}
+              >
+                <AddBoardTile pageId={pageId} onAdd={onAddBoard} />
+              </div>
+            </>
+          )}
         </div>
       </SortableContext>
 

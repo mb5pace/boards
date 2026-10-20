@@ -168,29 +168,27 @@ export function BoardCard({
       >
         {sortedLinks.length ? (
           <div className="board-card__links" role="list">
-            {sortedLinks.map((link, index) => (
+            {sortedLinks.map((link) => (
               <LinkRow
                 key={link.id}
                 link={link}
-                showHost={Boolean(link.note) || index === 0}
+                showHost={Boolean(link.note?.trim())}
                 onEdit={onEditLink}
                 onDelete={onDeleteLink}
               />
             ))}
           </div>
         ) : (
-          <div className="board-card__empty">
-            <span className="board-card__empty-icon" aria-hidden="true">↳</span>
-            <strong>No links yet</strong>
-            <small>Add one now, or drop a link here.</small>
-            <button type="button" onClick={() => onAddLink(board.id)}>Add first link</button>
-          </div>
+          <button
+            className="board-card__empty"
+            type="button"
+            onClick={() => onAddLink(board.id)}
+            aria-label={`Add a link to ${board.name}`}
+          >
+            <span aria-hidden="true">+ Add link</span>
+          </button>
         )}
       </SortableContext>
-
-      <button className="board-card__add-link" type="button" onClick={() => onAddLink(board.id)}>
-        <span aria-hidden="true">+</span> Add link
-      </button>
     </section>
   );
 }

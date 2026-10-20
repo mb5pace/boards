@@ -15,6 +15,7 @@ interface LinkRowProps {
 
 export function LinkRow({ link, showHost = false, onEdit, onDelete }: LinkRowProps) {
   const host = hostOf(link.url);
+  const subtitle = link.note?.trim() || (showHost ? host : '');
   const {
     attributes,
     listeners,
@@ -36,18 +37,24 @@ export function LinkRow({ link, showHost = false, onEdit, onDelete }: LinkRowPro
   return (
     <article
       ref={setNodeRef}
-      className={`link-row${isDragging ? ' link-row--dragging' : ''}`}
+      className={`link-row${subtitle ? ' link-row--with-subtitle' : ''}${isDragging ? ' link-row--dragging' : ''}`}
       style={style}
       {...attributes}
       {...listeners}
     >
-      <a className="link-row__main" href={link.url} target="_blank" rel="noreferrer">
-        <FaviconTile title={link.title} url={link.url} size={20} />
+      <a
+        className="link-row__main"
+        href={link.url}
+        target="_blank"
+        rel="noreferrer"
+        title={link.title}
+      >
+        <FaviconTile title={link.title} url={link.url} size={16} />
         <span className="link-row__copy">
           <span className="link-row__title">{link.title}</span>
-          {showHost ? <span className="link-row__host">{host}</span> : null}
+          {subtitle ? <span className="link-row__host">{subtitle}</span> : null}
         </span>
-        {link.pinned ? <span className="link-row__pin" title="Pinned" aria-label="Pinned">•</span> : null}
+        {link.pinned ? <span className="link-row__pin" title="Pinned" aria-label="Pinned" /> : null}
       </a>
       <div className="link-row__actions">
         <button
