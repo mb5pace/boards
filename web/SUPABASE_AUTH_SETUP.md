@@ -4,6 +4,8 @@ The default Boards page now requires a Supabase session and supports Google OAut
 
 ## 1. Configure Vercel environment variables
 
+For the `feature/authentication-testing` branch, the Vercel Preview environment variables have been added and scoped to this branch. A fresh deployment is required for them to take effect.
+
 In the Vercel project for Boards, add these variables for the branch preview and the environments where you want auth enabled:
 
 - `VITE_SUPABASE_URL`: the Project URL from Supabase Project Settings → API.
