@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
+import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
 type Notice = { text: string; error?: boolean } | null;
@@ -10,7 +11,7 @@ function providerLabel(user: { app_metadata?: Record<string, unknown> }): string
 }
 
 export function AccountSettings() {
-  const [user, setUser] = useState<Awaited<ReturnType<NonNullable<typeof supabase>['auth']['getUser']>>['data']['user']>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [name, setName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [newEmail, setNewEmail] = useState('');
