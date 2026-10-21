@@ -44,6 +44,7 @@ export default function AuthGate() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
+      if (nextSession) setAccountChipVisible(true);
       setSessionReady(true);
     });
 
@@ -119,12 +120,6 @@ export default function AuthGate() {
     });
     showMessage(error ? error.message : 'If an account exists for that email, a password reset link is on its way.', Boolean(error));
     setBusy(false);
-  };
-
-  const signOut = async () => {
-    if (!supabase) return;
-    const { error } = await supabase.auth.signOut();
-    if (error) showMessage(error.message, true);
   };
 
   if (!sessionReady) {
