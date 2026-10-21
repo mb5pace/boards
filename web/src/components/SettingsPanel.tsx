@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, MouseEvent } from 'react';
 import { WALLPAPERS, wallpaperById } from '../lib/wallpaper';
 import type { Settings } from '../types';
+import { AccountSettings } from './AccountSettings';
 
-export type SettingsTab = 'general' | 'appearance' | 'data';
+export type SettingsTab = 'general' | 'appearance' | 'data' | 'account';
 
 interface SettingsPanelProps {
   settings: Settings;
@@ -22,6 +23,7 @@ const tabs: Array<{ id: SettingsTab; label: string }> = [
   { id: 'general', label: 'General' },
   { id: 'appearance', label: 'Appearance' },
   { id: 'data', label: 'Data' },
+  { id: 'account', label: 'Account' },
 ];
 
 export function SettingsPanel({
@@ -193,6 +195,8 @@ export function SettingsPanel({
               </fieldset>
             </section>
           ) : null}
+
+          {activeTab === 'account' ? <AccountSettings /> : null}
 
           {activeTab === 'data' ? (
             <section className="settings-section" aria-labelledby="settings-data-title">
