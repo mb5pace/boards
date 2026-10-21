@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App';
+import AuthGate from './AuthGate';
 import { WALLPAPERS } from './lib/wallpaper';
 import './styles.css';
 
@@ -12,7 +12,7 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App />
+    <AuthGate />
   </StrictMode>,
 );
 
