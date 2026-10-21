@@ -12,6 +12,7 @@ function providerLabel(user: { app_metadata?: Record<string, unknown> }): string
 
 export function AccountSettings() {
   const [user, setUser] = useState<User | null>(null);
+  const [accountLoaded, setAccountLoaded] = useState(false);
   const [name, setName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [newEmail, setNewEmail] = useState('');
@@ -29,6 +30,7 @@ export function AccountSettings() {
         return;
       }
       setUser(data.user);
+      setAccountLoaded(true);
       setName(String(data.user?.user_metadata?.full_name ?? data.user?.user_metadata?.name ?? ''));
       setAvatarUrl(String(data.user?.user_metadata?.avatar_url ?? ''));
     });
@@ -107,6 +109,13 @@ export function AccountSettings() {
         <p>Manage your public profile and the credentials you use to sign in to Boards.</p>
       </div>
 
+      {!user && accountLoaded ? (
+        <div className="account-note">
+          Sign in to manage your profile and authentication details.
+          <button type="button" className="account-action" onClick={() => window.dispatchEvent(new Event('boards:open-auth'))}>Login now</button>
+        </div>
+      ) : null}
+
       {user ? (
         <div className="account-identity">
           {safeAvatarUrl ? (
@@ -122,9 +131,9 @@ export function AccountSettings() {
             <span className="account-provider">Signed in with {providerLabel(user)}</span>
           </div>
         </div>
-      ) : (
+      ) : !accountLoaded ? (
         <div className="account-note">Loading your account details…</div>
-      )}
+      ) : null}
 
       <form className="account-form" onSubmit={(event) => void saveProfile(event)}>
         <h4>Profile details</h4>
