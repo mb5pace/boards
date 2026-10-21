@@ -16,6 +16,14 @@ export default function AuthGate() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [accountChipVisible, setAccountChipVisible] = useState(true);
+
+  useEffect(() => {
+    const openAuth = () => setAuthOpen(true);
+    window.addEventListener('boards:open-auth', openAuth);
+    return () => window.removeEventListener('boards:open-auth', openAuth);
+  }, []);
 
   useEffect(() => {
     if (!supabase) {
@@ -127,20 +135,30 @@ export default function AuthGate() {
     return (
       <>
         <App />
-        <div className="auth-account">
-          <span className="auth-account__email" title={session.user.email ?? ''}>
-            {session.user.email ?? 'Signed in'}
-          </span>
-          <button type="button" onClick={() => void signOut()} className="auth-account__signout">
-            Sign out
+        {accountChipVisible ? (
+          <button
+            type="button"
+            className="auth-account-close"
+            onClick={() => setAccountChipVisible(false)}
+            aria-label="Dismiss account status"
+            title="Dismiss account status — manage your account in Settings"
+          >
+            <span>Signed in</span>
+            <span aria-hidden="true">×</span>
           </button>
-        </div>
+        ) : null}
       </>
     );
   }
 
   return (
-    <main className="auth-page">
+    <>
+      <App />
+      <button type="button" className="auth-login-now" onClick={() => setAuthOpen(true)}>
+        Login now <span aria-hidden="true">↗</span>
+      </button>
+      {authOpen ? (
+    <main className="auth-page auth-page--modal">
       <div className="auth-glow auth-glow--one" aria-hidden="true" />
       <div className="auth-glow auth-glow--two" aria-hidden="true" />
       <section className="auth-card" aria-labelledby="auth-title">
@@ -199,5 +217,7 @@ export default function AuthGate() {
         <p className="auth-legal">Secure authentication powered by Supabase. Your password is never stored by Boards.</p>
       </section>
     </main>
+      ) : null}
+    </>
   );
 }
